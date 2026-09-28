@@ -28,6 +28,7 @@
 #include <cfloat>
 #include <cmath>
 #include <cstdlib>
+#include <ctime>
 #include <chrono>
 #include <iostream>
 #include <iterator>
@@ -2885,6 +2886,137 @@ static BambuBedType to_bambu_bed_type(BedType type)
     return bambu_bed_type;
 }
 
+static std::string intam_header_value(std::string s)
+{
+    for (char &c : s) {
+        if (c == ':' || c == '\n' || c == '\r')
+            c = '-';
+    }
+    boost::trim(s);
+    return s.empty() ? std::string("unknown") : s;
+}
+
+static std::string intam_note_field(const std::string &notes, const std::string &key)
+{
+    const std::string prefix = key + ":";
+    std::istringstream in(notes);
+    std::string line;
+    while (std::getline(in, line)) {
+        boost::trim(line);
+        if (boost::starts_with(line, prefix))
+            return intam_header_value(line.substr(prefix.size()));
+    }
+    return {};
+}
+
+// INTAMSUITE NEO IsIntamGCode() only inspects the first 100 non-empty comments
+// and requires ;START_OF_HEADER / ;END_OF_HEADER plus >25 new-style KEY:VALUE lines.
+// Values must not contain a colon. Emit this block before Orca thumbnails.
+static std::string make_intamsys_header(const Print &print, unsigned int layer_count, int bed_temp)
+{
+    const PrintConfig &cfg = print.config();
+    if (cfg.printer_notes.value.find("PRINTER_VENDOR_INTAMSYS") == std::string::npos)
+        return {};
+
+    std::ostringstream out;
+    auto kv = [&out](const char *key, const std::string &value) {
+        out << ';' << key << ':' << intam_header_value(value) << '\n';
+    };
+    auto kvd = [&out](const char *key, double v) {
+        out << ';' << key << ':' << std::fixed << std::setprecision(3) << v << '\n';
+    };
+
+    std::string machine_name = cfg.printer_model.value;
+    if (machine_name.empty())
+        machine_name = "unknown";
+    std::string machine_key = intam_note_field(cfg.printer_notes.value, "MACHINE_KEY");
+    if (machine_key.empty())
+        machine_key = "unknown";
+
+    const size_t fid = 0;
+    std::string mat_name = cfg.filament_type.values.empty() ? std::string("PLA") : cfg.filament_type.get_at(fid);
+    std::string mat_key  = cfg.filament_ids.values.empty() ? std::string() : cfg.filament_ids.get_at(fid);
+    if (mat_key.empty())
+        mat_key = mat_name;
+
+    const int nozzle_temp = cfg.nozzle_temperature_initial_layer.get_at(fid);
+    int chamber = 0;
+    if (!cfg.chamber_temperature.values.empty())
+        chamber = *std::max_element(cfg.chamber_temperature.values.begin(), cfg.chamber_temperature.values.end());
+
+    BoundingBoxf bbox;
+    if (!print.first_layer_convex_hull().empty()) {
+        std::vector<Vec2d> pts;
+        pts.reserve(print.first_layer_convex_hull().size());
+        for (const Point &pt : print.first_layer_convex_hull().points)
+            pts.emplace_back(print.translate_to_print_space(pt));
+        bbox = BoundingBoxf(pts);
+    } else {
+        bbox = BoundingBoxf(cfg.printable_area.values);
+    }
+
+    coordf_t min_z = 0;
+    coordf_t max_z = 0;
+    for (const PrintObject *obj : print.objects()) {
+        if (obj->layers().empty())
+            continue;
+        const coordf_t z0 = obj->layers().front()->print_z;
+        const coordf_t z1 = obj->layers().back()->print_z;
+        min_z = (min_z == 0) ? z0 : std::min(min_z, z0);
+        max_z = std::max(max_z, z1);
+    }
+
+    std::time_t t = std::time(nullptr);
+    std::tm tm{};
+#ifdef _WIN32
+    localtime_s(&tm, &t);
+#else
+    localtime_r(&t, &tm);
+#endif
+    char datebuf[16];
+    std::strftime(datebuf, sizeof(datebuf), "%Y-%m-%d", &tm);
+
+    out << ";START_OF_HEADER\n";
+    kv("FLAVOR", "Marlin");
+    kv("GENERATOR.VERSION", SLIC3R_VERSION);
+    kv("GENERATOR.BUILD_DATE", datebuf);
+    kv("TARGET_MACHINE.NAME", machine_name);
+    kv("TARGET_MACHINE.KEY", machine_key);
+    kvd("EXTRUDER_TRAIN.0.INITIAL_TEMPERATURE", nozzle_temp);
+    kvd("EXTRUDER_TRAIN.0.MATERIAL.VOLUME_USED", 0);
+    kvd("EXTRUDER_TRAIN.0.MATERIAL.WEIGHT_USED", 0);
+    kv("EXTRUDER_TRAIN.0.MATERIAL.NAME", mat_name);
+    kv("EXTRUDER_TRAIN.0.MATERIAL.KEY", mat_key);
+    kvd("EXTRUDER_TRAIN.0.NOZZLE.DIAMETER", cfg.nozzle_diameter.get_at(fid));
+    kvd("PRINT.BUILD_TEMPERATURE", bed_temp);
+    kvd("PRINT.CHAMBER_TEMPERATURE", chamber);
+    out << ";PRINT.TIME:"
+        << GCodeProcessor::reserved_tag(GCodeProcessor::ETags::Print_Time_Sec_Placeholder) << '\n';
+    kvd("PRINT.SIZE.MIN.X", bbox.min.x());
+    kvd("PRINT.SIZE.MIN.Y", bbox.min.y());
+    kvd("PRINT.SIZE.MIN.Z", min_z);
+    kvd("PRINT.SIZE.MAX.X", bbox.max.x());
+    kvd("PRINT.SIZE.MAX.Y", bbox.max.y());
+    kvd("PRINT.SIZE.MAX.Z", max_z);
+    kvd("PRINT.TOTAL.LAYERS", layer_count);
+    kvd("PRINT.TOTAL.LINES", 0);
+    kv("PRINT.MODE", "Regular");
+    // Required by INTAMSUITE IsIntamGCode (bingoNewCount > 25). Values are placeholders.
+    kvd("PRINT_TIME.LINE_TYPE.WALL-OUTER", 0);
+    kvd("PRINT_TIME.LINE_TYPE.WALL-INNER", 0);
+    kvd("PRINT_TIME.LINE_TYPE.FILL", 0);
+    kvd("PRINT_TIME.LINE_TYPE.SKIN", 0);
+    kvd("PRINT_TIME.LINE_TYPE.SUPPORT", 0);
+    kvd("PRINT_TIME.LINE_TYPE.SUPPORT-INTERFACE", 0);
+    kvd("PRINT_TIME.LINE_TYPE.RAFT", 0);
+    kvd("PRINT_TIME.LINE_TYPE.SKIRT", 0);
+    kvd("PRINT_TIME.LINE_TYPE.PRIME-TOWER", 0);
+    kvd("PRINT_TIME.LINE_TYPE.TRAVEL", 0);
+    kvd("PRINT_TIME.LINE_TYPE.RETRACTION", 0);
+    out << ";END_OF_HEADER\n\n";
+    return out.str();
+}
+
 void GCode::_do_export(Print& print, GCodeOutputStream &file, ThumbnailsGeneratorCallback thumbnail_cb)
 {
     PROFILE_FUNC();
@@ -2981,6 +3113,13 @@ void GCode::_do_export(Print& print, GCodeOutputStream &file, ThumbnailsGenerato
     if (m_config.small_area_infill_flow_compensation.value && !m_config.small_area_infill_flow_compensation_model.empty())
         m_small_area_infill_flow_compensator = make_unique<SmallAreaInfillFlowCompensator>(print.config());
     
+    {
+        const std::string intam_header = make_intamsys_header(print, m_layer_count,
+                          get_bed_temperature(0, true, print.config().curr_bed_type));
+        if (!intam_header.empty())
+            file.write(intam_header);
+    }
+
     // Process file_start_gcode - written at the very top of the file, before any header
     {
         std::string top_gcode_template = print.config().file_start_gcode.value;
@@ -4593,10 +4732,9 @@ void GCode::print_machine_envelope(GCodeOutputStream &file, Print &print)
                 int(MAX_LIMIT(machine_max_acceleration_retracting) + 0.5),
                 int(MAX_LIMIT(machine_max_acceleration_travel) + 0.5));
         else
-            file.write_format("M204 P%d R%d T%d\n",
-                int(MAX_LIMIT(machine_max_acceleration_extruding) + 0.5),
-                int(MAX_LIMIT(machine_max_acceleration_retracting) + 0.5),
-                travel_acc);
+            // Marlin legacy only honors M204 S. P/R/T is ignored by INTAM / older Marlin.
+            file.write_format("M204 S%d\n",
+                int(MAX_LIMIT(machine_max_acceleration_extruding) + 0.5));
 
         assert(is_decimal_separator_point());
         file.write_format(flavor == gcfRepRapFirmware

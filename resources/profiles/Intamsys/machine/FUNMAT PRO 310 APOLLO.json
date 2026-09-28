@@ -1,0 +1,12 @@
+{
+    "type": "machine_model",
+    "name": "FUNMAT PRO 310 APOLLO",
+    "model_id": "intamsys_funmat_pro_310_apollo",
+    "nozzle_diameter": "0.4",
+    "machine_tech": "FFF",
+    "family": "INTAMSYS",
+    "bed_model": "",
+    "bed_texture": "",
+    "hotend_model": "",
+    "default_materials": "INTAMSYS PLA @310 Apollo"
+}

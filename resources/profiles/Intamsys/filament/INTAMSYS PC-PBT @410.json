@@ -1,0 +1,21 @@
+{
+    "type": "filament",
+    "filament_id": "INTAM_PCPBT_410",
+    "setting_id": "IF410PCPBT",
+    "name": "INTAMSYS PC-PBT @410",
+    "from": "system",
+    "instantiation": "true",
+    "inherits": "fdm_filament_pc-pbt",
+    "filament_vendor": [
+        "INTAMSYS"
+    ],
+    "compatible_printers": [
+        "FUNMAT PRO 410 0.4 nozzle"
+    ],
+    "filament_start_gcode": [
+        "; INTAMSYS PC-PBT start"
+    ],
+    "filament_end_gcode": [
+        "; INTAMSYS PC-PBT end"
+    ]
+}

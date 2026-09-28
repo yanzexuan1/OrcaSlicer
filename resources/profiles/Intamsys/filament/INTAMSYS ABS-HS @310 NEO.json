@@ -1,0 +1,21 @@
+{
+    "type": "filament",
+    "filament_id": "INTAM_ABSHS_310N",
+    "setting_id": "IF310NABSHS",
+    "name": "INTAMSYS ABS-HS @310 NEO",
+    "from": "system",
+    "instantiation": "true",
+    "inherits": "fdm_filament_abs-hs",
+    "filament_vendor": [
+        "INTAMSYS"
+    ],
+    "compatible_printers": [
+        "FUNMAT PRO 310 NEO 0.4 nozzle"
+    ],
+    "filament_start_gcode": [
+        "; INTAMSYS ABS-HS start"
+    ],
+    "filament_end_gcode": [
+        "; INTAMSYS ABS-HS end"
+    ]
+}

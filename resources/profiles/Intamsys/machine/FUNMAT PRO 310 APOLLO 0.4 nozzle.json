@@ -1,0 +1,30 @@
+{
+    "type": "machine",
+    "setting_id": "IM310A04",
+    "name": "FUNMAT PRO 310 APOLLO 0.4 nozzle",
+    "from": "system",
+    "instantiation": "true",
+    "inherits": "fdm_intamsys_common",
+    "printer_model": "FUNMAT PRO 310 APOLLO",
+    "printer_variant": "0.4",
+    "default_print_profile": "0.20mm Standard @310 Apollo",
+    "default_filament_profile": [
+        "INTAMSYS PLA @310 Apollo"
+    ],
+    "nozzle_diameter": [
+        "0.4"
+    ],
+    "printable_area": [
+        "0x0",
+        "350x0",
+        "350x260",
+        "0x260"
+    ],
+    "printable_height": "260",
+    "bed_exclude_area": [
+        "0x0"
+    ],
+    "extruder_offset": [
+        "0x0"
+    ]
+}

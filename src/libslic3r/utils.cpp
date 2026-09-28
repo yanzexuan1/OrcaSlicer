@@ -952,8 +952,23 @@ CopyFileResult copy_file(const std::string &from, const std::string &to, std::st
     CopyFileResult ret = SUCCESS;
     BOOL result = CopyFileW(src_wstr, dst_wstr, FALSE);
     if (!result) {
-        DWORD errCode = GetLastError();
-        error_message = "Error: " + errCode;
+        const DWORD errCode = GetLastError();
+        // Do not write "Error: " + errCode — that is pointer arithmetic on the literal.
+        error_message = "Error: " + std::to_string(errCode);
+        wchar_t *sys_msg = nullptr;
+        const DWORD sys_len = ::FormatMessageW(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            reinterpret_cast<LPWSTR>(&sys_msg), 0, nullptr);
+        if (sys_len > 0 && sys_msg) {
+            size_t trim = sys_len;
+            while (trim > 0 && (sys_msg[trim - 1] == L'\r' || sys_msg[trim - 1] == L'\n'))
+                sys_msg[--trim] = L'\0';
+            error_message += " (";
+            error_message += boost::nowide::narrow(sys_msg);
+            error_message += ')';
+            ::LocalFree(sys_msg);
+        }
         ret = FAIL_COPY_FILE;
         goto __finished;
     }

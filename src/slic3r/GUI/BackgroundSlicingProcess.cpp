@@ -22,6 +22,7 @@
 #include "libslic3r/Utils.hpp"
 #include "PostProcessor.hpp"
 #include "libslic3r/Format/SL1.hpp"
+#include "libslic3r/GCode/IntamGCode.hpp"
 #include "libslic3r/Thread.hpp"
 #include "libslic3r/libslic3r.h"
 
@@ -743,7 +744,7 @@ void BackgroundSlicingProcess::set_task(const PrintBase::TaskParams& params)
 }
 
 // Set the output path of the G-code.
-void BackgroundSlicingProcess::schedule_export(const std::string& path, bool export_path_on_removable_media)
+void BackgroundSlicingProcess::schedule_export(const std::string& path, bool export_path_on_removable_media, bool intam_gcode)
 {
     assert(m_export_path.empty());
     if (!m_export_path.empty())
@@ -754,6 +755,7 @@ void BackgroundSlicingProcess::schedule_export(const std::string& path, bool exp
     this->invalidate_step(bspsGCodeFinalize);
     m_export_path                    = path;
     m_export_path_on_removable_media = export_path_on_removable_media;
+    m_export_intam_gcode             = intam_gcode;
 }
 
 void BackgroundSlicingProcess::schedule_upload(Slic3r::PrintHostJob upload_job)
@@ -775,6 +777,7 @@ void BackgroundSlicingProcess::reset_export()
     if (!this->running()) {
         m_export_path.clear();
         m_export_path_on_removable_media = false;
+        m_export_intam_gcode = false;
         // invalidate_step expects the mutex to be locked.
         std::scoped_lock<std::mutex> lock(m_print->state_mutex());
         this->invalidate_step(bspsGCodeFinalize);
@@ -834,14 +837,40 @@ void BackgroundSlicingProcess::finalize_gcode()
     };
     m_print->set_status(99, _utf8(L("Successfully executed post-processing script")));
 
+    std::string copy_source = output_path;
+    std::string intam_temp;
+    if (m_export_intam_gcode) {
+        m_print->set_status(99, _u8L("Converting to Intam G-code"));
+        // Write beside the plate temp G-code (usually under %TEMP%), not next to the
+        // user-chosen export path. Yunpan / Chinese filenames made export_path+".intam.tmp"
+        // fail to open or to be found again by CopyFileW.
+        intam_temp = output_path + ".intam.tmp";
+        if (!convert_gcode_to_intam_dialect(output_path, intam_temp)) {
+            remove_post_processed_temp_file();
+            throw Slic3r::ExportError(_u8L("Failed to convert G-code to Intamsys dialect."));
+        }
+        copy_source = intam_temp;
+    }
+    auto remove_intam_temp = [&intam_temp]() {
+        if (intam_temp.empty())
+            return;
+        try {
+            boost::filesystem::remove(intam_temp);
+        } catch (const std::exception& ex) {
+            BOOST_LOG_TRIVIAL(error) << "Failed to remove Intam temp file " << intam_temp << ": " << ex.what();
+        }
+    };
+
     // FIXME localize the messages
     std::string error_message;
     int copy_ret_val = CopyFileResult::SUCCESS;
     try {
-        copy_ret_val = copy_file(output_path, export_path, error_message, m_export_path_on_removable_media);
+        copy_ret_val = copy_file(copy_source, export_path, error_message, m_export_path_on_removable_media);
         remove_post_processed_temp_file();
+        remove_intam_temp();
     } catch (...) {
         remove_post_processed_temp_file();
+        remove_intam_temp();
         throw Slic3r::ExportError(_u8L("Unknown error occurred during exporting G-code."));
     }
     switch (copy_ret_val) {

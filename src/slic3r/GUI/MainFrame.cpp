@@ -2020,6 +2020,8 @@ wxBoxSizer* MainFrame::create_side_tools()
             }
             else if (m_print_select == eExportGcode)
                 wxPostEvent(m_plater, SimpleEvent(EVT_GLTOOLBAR_EXPORT_GCODE));
+            else if (m_print_select == eExportIntamGcode)
+                m_plater->export_gcode(false, true);
             else if (m_print_select == eSendGcode)
                 wxPostEvent(m_plater, SimpleEvent(EVT_GLTOOLBAR_SEND_GCODE));
             else if (m_print_select == eUploadGcode)
@@ -2128,6 +2130,19 @@ wxBoxSizer* MainFrame::create_side_tools()
                 }
 
                 p->append_button(export_gcode_btn);
+
+                SideButton* export_intam_gcode_btn = new SideButton(p, _L("Export Intam G-code file"), "");
+                export_intam_gcode_btn->SetCornerRadius(0);
+                export_intam_gcode_btn->Bind(wxEVT_BUTTON, [this, p](wxCommandEvent&) {
+                    m_print_btn->SetLabel(_L("Export Intam G-code file"));
+                    m_print_select = eExportIntamGcode;
+                    m_print_enable = get_enable_print_status();
+                    m_print_btn->Enable(m_print_enable);
+                    this->Layout();
+                    fit_tab_labels();
+                    p->Dismiss();
+                    });
+                p->append_button(export_intam_gcode_btn);
             }
             else {
                 //Orca Slicer Buttons
@@ -2261,6 +2276,19 @@ wxBoxSizer* MainFrame::create_side_tools()
                     p->Dismiss();
                 });
                 p->append_button(export_gcode_btn);
+
+                SideButton* export_intam_gcode_btn = new SideButton(p, _L("Export Intam G-code file"), "");
+                export_intam_gcode_btn->SetCornerRadius(0);
+                export_intam_gcode_btn->Bind(wxEVT_BUTTON, [this, p](wxCommandEvent&) {
+                    m_print_btn->SetLabel(_L("Export Intam G-code file"));
+                    m_print_select = eExportIntamGcode;
+                    m_print_enable = get_enable_print_status();
+                    m_print_btn->Enable(m_print_enable);
+                    this->Layout();
+                    fit_tab_labels();
+                    p->Dismiss();
+                });
+                p->append_button(export_intam_gcode_btn);
             }
 
             p->Popup(m_print_btn);
@@ -2348,7 +2376,7 @@ bool MainFrame::get_enable_print_status()
         }
         enable = enable && !is_all_plates;
     }
-    else if (m_print_select == eExportGcode)
+    else if (m_print_select == eExportGcode || m_print_select == eExportIntamGcode)
     {
         if (!current_plate->is_slice_result_valid())
         {
@@ -2875,6 +2903,10 @@ void MainFrame::init_menubar_as_editor()
 
         append_menu_item(export_menu, wxID_ANY, _L("Export G-code") + dots/* + "\t" + ctrl + "G"*/, _L("Export current plate as G-code"),
             [this](wxCommandEvent&) { if (m_plater) m_plater->export_gcode(false); }, "menu_export_gcode", nullptr,
+            [this]() {return can_export_gcode(); }, this);
+
+        append_menu_item(export_menu, wxID_ANY, _L("Export Intam G-code") + dots, _L("Export current plate as Intamsys-compatible G-code"),
+            [this](wxCommandEvent&) { if (m_plater) m_plater->export_gcode(false, true); }, "menu_export_gcode", nullptr,
             [this]() {return can_export_gcode(); }, this);
 
         append_menu_item(export_menu, wxID_ANY, _L("Export toolpaths as OBJ") + dots, _L("Export toolpaths as OBJ"),
