@@ -1,0 +1,12 @@
+{
+    "type": "machine_model",
+    "name": "FUNMAT PRO 410",
+    "model_id": "intamsys_funmat_pro_410",
+    "nozzle_diameter": "0.4",
+    "machine_tech": "FFF",
+    "family": "INTAMSYS",
+    "bed_model": "",
+    "bed_texture": "",
+    "hotend_model": "",
+    "default_materials": "INTAMSYS PEEK @410"
+}

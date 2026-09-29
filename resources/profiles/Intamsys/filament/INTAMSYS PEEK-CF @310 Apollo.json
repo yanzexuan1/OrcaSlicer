@@ -1,0 +1,93 @@
+{
+    "type": "filament",
+    "filament_id": "INTAM_PEEKCF_310A",
+    "setting_id": "IF310APEEKCF",
+    "name": "INTAMSYS PEEK-CF @310 Apollo",
+    "from": "system",
+    "instantiation": "true",
+    "inherits": "fdm_filament_peek-cf",
+    "filament_vendor": [
+        "INTAMSYS"
+    ],
+    "filament_type": [
+        "PEEK-CF"
+    ],
+    "filament_density": [
+        "1.3"
+    ],
+    "filament_flow_ratio": [
+        "0.96"
+    ],
+    "filament_max_volumetric_speed": [
+        "20"
+    ],
+    "nozzle_temperature": [
+        "440"
+    ],
+    "nozzle_temperature_initial_layer": [
+        "440"
+    ],
+    "nozzle_temperature_range_low": [
+        "400"
+    ],
+    "nozzle_temperature_range_high": [
+        "450"
+    ],
+    "hot_plate_temp": [
+        "130"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "130"
+    ],
+    "textured_plate_temp": [
+        "130"
+    ],
+    "textured_plate_temp_initial_layer": [
+        "130"
+    ],
+    "cool_plate_temp": [
+        "130"
+    ],
+    "cool_plate_temp_initial_layer": [
+        "130"
+    ],
+    "eng_plate_temp": [
+        "130"
+    ],
+    "eng_plate_temp_initial_layer": [
+        "130"
+    ],
+    "chamber_temperature": [
+        "100"
+    ],
+    "activate_chamber_temp_control": [
+        "1"
+    ],
+    "fan_min_speed": [
+        "0"
+    ],
+    "fan_max_speed": [
+        "100"
+    ],
+    "close_fan_the_first_x_layers": [
+        "0"
+    ],
+    "slow_down_layer_time": [
+        "5"
+    ],
+    "filament_retraction_length": [
+        "1"
+    ],
+    "filament_retraction_speed": [
+        "30"
+    ],
+    "compatible_printers": [
+        "FUNMAT PRO 310 APOLLO 0.4 nozzle"
+    ],
+    "filament_start_gcode": [
+        "; INTAMSYS PEEK-CF start"
+    ],
+    "filament_end_gcode": [
+        "; INTAMSYS PEEK-CF end"
+    ]
+}

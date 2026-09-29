@@ -1,0 +1,122 @@
+{
+    "name": "INTAMSYS",
+    "version": "01.00.00.09",
+    "force_update": "0",
+    "description": "INTAMSYS printer configurations (310 Apollo, 310 NEO and 410, single extruder)",
+    "machine_model_list": [
+        {
+            "name": "FUNMAT PRO 310 APOLLO",
+            "sub_path": "machine/FUNMAT PRO 310 APOLLO.json"
+        },
+        {
+            "name": "FUNMAT PRO 310 NEO",
+            "sub_path": "machine/FUNMAT PRO 310 NEO.json"
+        },
+        {
+            "name": "FUNMAT PRO 410",
+            "sub_path": "machine/FUNMAT PRO 410.json"
+        }
+    ],
+    "process_list": [
+        {
+            "name": "fdm_process_common",
+            "sub_path": "process/fdm_process_common.json"
+        },
+        {
+            "name": "0.20mm Standard @310 Apollo",
+            "sub_path": "process/0.20mm Standard @310 Apollo.json"
+        },
+        {
+            "name": "0.20mm PEEK-CF @310 Apollo",
+            "sub_path": "process/0.20mm PEEK-CF @310 Apollo.json"
+        },
+        {
+            "name": "0.20mm PEEK-CF @310 NEO",
+            "sub_path": "process/0.20mm PEEK-CF @310 NEO.json"
+        },
+        {
+            "name": "0.20mm PEEK @410",
+            "sub_path": "process/0.20mm PEEK @410.json"
+        },
+        {
+            "name": "0.20mm PC-PBT @410",
+            "sub_path": "process/0.20mm PC-PBT @410.json"
+        },
+        {
+            "name": "0.20mm ABS-HS @310 NEO",
+            "sub_path": "process/0.20mm ABS-HS @310 NEO.json"
+        }
+    ],
+    "filament_list": [
+        {
+            "name": "fdm_filament_common",
+            "sub_path": "filament/fdm_filament_common.json"
+        },
+        {
+            "name": "fdm_filament_pla",
+            "sub_path": "filament/fdm_filament_pla.json"
+        },
+        {
+            "name": "fdm_filament_peek-cf",
+            "sub_path": "filament/fdm_filament_peek-cf.json"
+        },
+        {
+            "name": "fdm_filament_peek",
+            "sub_path": "filament/fdm_filament_peek.json"
+        },
+        {
+            "name": "fdm_filament_pc-pbt",
+            "sub_path": "filament/fdm_filament_pc-pbt.json"
+        },
+        {
+            "name": "fdm_filament_abs-hs",
+            "sub_path": "filament/fdm_filament_abs-hs.json"
+        },
+        {
+            "name": "INTAMSYS PLA @310 Apollo",
+            "sub_path": "filament/INTAMSYS PLA @310 Apollo.json"
+        },
+        {
+            "name": "INTAMSYS PEEK-CF @310 Apollo",
+            "sub_path": "filament/INTAMSYS PEEK-CF @310 Apollo.json"
+        },
+        {
+            "name": "INTAMSYS PEEK-CF @310 NEO",
+            "sub_path": "filament/INTAMSYS PEEK-CF @310 NEO.json"
+        },
+        {
+            "name": "INTAMSYS PEEK @410",
+            "sub_path": "filament/INTAMSYS PEEK @410.json"
+        },
+        {
+            "name": "INTAMSYS PC-PBT @410",
+            "sub_path": "filament/INTAMSYS PC-PBT @410.json"
+        },
+        {
+            "name": "INTAMSYS ABS-HS @310 NEO",
+            "sub_path": "filament/INTAMSYS ABS-HS @310 NEO.json"
+        }
+    ],
+    "machine_list": [
+        {
+            "name": "fdm_machine_common",
+            "sub_path": "machine/fdm_machine_common.json"
+        },
+        {
+            "name": "fdm_intamsys_common",
+            "sub_path": "machine/fdm_intamsys_common.json"
+        },
+        {
+            "name": "FUNMAT PRO 310 APOLLO 0.4 nozzle",
+            "sub_path": "machine/FUNMAT PRO 310 APOLLO 0.4 nozzle.json"
+        },
+        {
+            "name": "FUNMAT PRO 310 NEO 0.4 nozzle",
+            "sub_path": "machine/FUNMAT PRO 310 NEO 0.4 nozzle.json"
+        },
+        {
+            "name": "FUNMAT PRO 410 0.4 nozzle",
+            "sub_path": "machine/FUNMAT PRO 410 0.4 nozzle.json"
+        }
+    ]
+}

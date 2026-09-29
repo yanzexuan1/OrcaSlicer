@@ -1,0 +1,21 @@
+{
+    "type": "filament",
+    "filament_id": "INTAM_PEEK_410G2",
+    "setting_id": "IF410G2PEEK",
+    "name": "INTAMSYS PEEK @410",
+    "from": "system",
+    "instantiation": "true",
+    "inherits": "fdm_filament_peek",
+    "filament_vendor": [
+        "INTAMSYS"
+    ],
+    "compatible_printers": [
+        "FUNMAT PRO 410 0.4 nozzle"
+    ],
+    "filament_start_gcode": [
+        "; INTAMSYS PEEK start"
+    ],
+    "filament_end_gcode": [
+        "; INTAMSYS PEEK end"
+    ]
+}

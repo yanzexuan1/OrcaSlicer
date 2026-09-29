@@ -7115,7 +7115,7 @@ struct Plater::priv
             GUI::show_error(this->q, msg);
         }
     }
-    void export_gcode(fs::path output_path, bool output_path_on_removable_media);
+    void export_gcode(fs::path output_path, bool output_path_on_removable_media, bool intam_gcode = false);
     void export_gcode(fs::path output_path, bool output_path_on_removable_media, PrintHostJob upload_job);
 
     void reload_from_disk();
@@ -11077,7 +11077,7 @@ bool Plater::priv::restart_background_process(unsigned int state)
     return false;
 }
 
-void Plater::priv::export_gcode(fs::path output_path, bool output_path_on_removable_media)
+void Plater::priv::export_gcode(fs::path output_path, bool output_path_on_removable_media, bool intam_gcode)
 {
     wxCHECK_RET(!(output_path.empty()), "export_gcode: output_path and upload_job empty");
 
@@ -11100,7 +11100,7 @@ void Plater::priv::export_gcode(fs::path output_path, bool output_path_on_remova
 
     show_warning_dialog = true;
     if (! output_path.empty()) {
-        background_process.schedule_export(output_path.string(), output_path_on_removable_media);
+        background_process.schedule_export(output_path.string(), output_path_on_removable_media, intam_gcode);
         notification_manager->push_delayed_notification(NotificationType::ExportOngoing, []() {return true; }, 1000, 0);
     } else {
         BOOST_LOG_TRIVIAL(info) << "output_path  is empty";
@@ -18292,7 +18292,7 @@ void Plater::apply_cut_object_to_model(size_t obj_idx, const ModelObjectPtrs& ne
     // w.wait_for_idle();
 }
 
-void Plater::export_gcode(bool prefer_removable)
+void Plater::export_gcode(bool prefer_removable, bool intam_gcode)
 {
     if (p->model.objects.empty())
         return;
@@ -18323,6 +18323,12 @@ void Plater::export_gcode(bool prefer_removable)
         return;
     }
     default_output_file = fs::path(Slic3r::fold_utf8_to_ascii(default_output_file.string()));
+    if (intam_gcode) {
+        const std::string stem = default_output_file.stem().string();
+        const std::string ext  = default_output_file.extension().string();
+        if (stem.find("_intam") == std::string::npos)
+            default_output_file = default_output_file.parent_path() / (stem + "_intam" + (ext.empty() ? ".gcode" : ext));
+    }
     AppConfig 				&appconfig 				 = *wxGetApp().app_config;
     RemovableDriveManager 	&removable_drive_manager = *wxGetApp().removable_drive_manager();
     // Get a last save path, either to removable media or to an internal media.
@@ -18338,7 +18344,9 @@ void Plater::export_gcode(bool prefer_removable)
     fs::path output_path;
     {
         std::string ext = default_output_file.extension().string();
-        wxFileDialog dlg(this, (printer_technology() == ptFFF) ? _L("Save G-code file as:") : _L("Save SLA file as:"),
+        wxFileDialog dlg(this, (printer_technology() == ptFFF) ?
+            (intam_gcode ? _L("Save Intam G-code file as:") : _L("Save G-code file as:")) :
+            _L("Save SLA file as:"),
             start_dir,
             from_path(default_output_file.filename()),
             GUI::file_wildcards((printer_technology() == ptFFF) ? FT_GCODE : FT_SL1, ext),
@@ -18367,7 +18375,7 @@ void Plater::export_gcode(bool prefer_removable)
         p->exporting_status = path_on_removable_media ? ExportingStatus::EXPORTING_TO_REMOVABLE : ExportingStatus::EXPORTING_TO_LOCAL;
         p->last_output_path = output_path.string();
         p->last_output_dir_path = output_path.parent_path().string();
-        p->export_gcode(output_path, path_on_removable_media);
+        p->export_gcode(output_path, path_on_removable_media, intam_gcode);
         // Storing a path to AppConfig either as path to removable media or a path to internal media.
         // is_path_on_removable_drive() is called with the "true" parameter to update its internal database as the user may have shuffled the external drives
         // while the dialog was open.

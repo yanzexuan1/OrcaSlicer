@@ -149,7 +149,7 @@ public:
 
 	// Set the export path of the G-code.
 	// Once the path is set, the G-code
-	void schedule_export(const std::string &path, bool export_path_on_removable_media);
+	void schedule_export(const std::string &path, bool export_path_on_removable_media, bool intam_gcode = false);
 	// Set print host upload job data to be enqueued to the PrintHostJobQueue
 	// after current print slicing is complete
 	void schedule_upload(Slic3r::PrintHostJob upload_job);
@@ -245,6 +245,7 @@ private:
 	// but once set, it cannot be re-set.
 	std::string 				m_export_path;
 	bool 						m_export_path_on_removable_media = false;
+	bool 						m_export_intam_gcode = false;
 	// Print host upload job to schedule after slicing is complete, used by schedule_upload(),
 	// empty by default (ie. no upload to schedule)
 	PrintHostJob                m_upload_job;
